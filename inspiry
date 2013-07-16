@@ -1,0 +1,66 @@
+#!/usr/bin/ruby1.9.1
+
+require 'getoptlong'
+require 'yaml'
+require 'rockstar'
+
+Rockstar.lastfm = YAML.load_file("res/lastfm.yml")
+
+module ExploreMore
+	class Explorer
+		attr_accessor :resources
+		def initialize()
+			@resources = {}
+		end
+		def get_resource(name)
+			@resources[Digest::MD5.digest(name)]
+		end
+		def set_resource(name,val)
+			@resources[Digest::MD5.digest(name)] = val
+		end
+		def explore
+		end
+	end
+	class TrackExplorer < Explorer
+		def explore(track, num=10)
+			if res = get_resource(track) 
+				return res
+			end
+			song, artist = track.split(/ ?- ?/)
+			name = track
+			unless track.is_a?(Rockstar::Track)
+				track = Rockstar::Track.new track
+			end
+			sim = track.similar.to_a[0,num]
+			set_resource name, sim
+			return sim
+		end
+	end
+	class TagExplorer < Explorer
+		def explore(tag, num=10)
+			if res = get_resource(tag) 
+				return res
+			end
+			name = tag
+			unless tag.is_a?(Rockstar::Tag)
+				tag = Rockstar::Tag.new tag
+			end
+			top_tracks = tag.top_tracks.to_a[0,num]
+			set_resource name, top_tracks
+			return top_tracks
+		end
+	end
+end	
+
+
+exp = ExploreMore::TagExplorer.new
+ARGV.each { |tag|
+	puts "#{tag} songs"
+	puts exp.explore(tag).inspect
+	#rTag.top_tracks.each_with_index { |track, idx|
+	#	puts "#{idx.to_s.rjust(3)}.\t#{track.name} - #{track.artist}"
+	#	STDOUT.flush
+	#	sleep 0.5
+	#}
+	abort 'dicks!'
+}

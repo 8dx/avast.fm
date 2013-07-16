@@ -1,0 +1,19 @@
+#!/usr/bin/ruby1.9.1
+
+require 'getoptlong'
+require 'yaml'
+require 'rockstar'
+
+Rockstar.lastfm = YAML.load_file('res/lastfm.yml')
+abort "I need to know a user." if ARGV.length < 1
+user = ARGV.shift
+rUser = Rockstar::User.new(user)
+puts "Top Artists for #{rUser.username}"
+output = ""
+rUser.top_artists.to_a[0,5].each { |artist|
+	print "\t #{artist.name} - "
+	artist.similar.to_a[0,3].each { |sim|
+		print " #{sim.name} "
+	}
+	print "\n"
+}
